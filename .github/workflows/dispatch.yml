@@ -1,6 +1,8 @@
 name: e2e
 
 on: 
+  repository_dispatch:
+    types: [test_dispatch]
   workflow_dispatch:
   push:
     branches:
@@ -9,7 +11,7 @@ on:
 jobs:
 
   test-dispatch:
-    name: Run E2E test
+    name: Run Dispatch Test
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -32,11 +34,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      # Install project dependencies
-      - name: Install dependencies
-        run: |
-          npm ci
 
       # Echo Message
       - name: Echo Message
