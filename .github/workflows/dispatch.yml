@@ -1,0 +1,44 @@
+name: e2e
+
+on: 
+  workflow_dispatch:
+  push:
+    branches:
+       - main
+
+jobs:
+
+  test-dispatch:
+    name: Run E2E test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      pages: write
+
+    steps:
+      # Set the start timestamp for duration calculation
+      - name: Set start timestamp
+        id: start
+        run: |
+          echo "start-time=$EPOCHSECONDS" >> "$GITHUB_OUTPUT"
+
+      # Checkout the main branch into 'main' directory
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+
+      # Set up Node.js version 22
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Install project dependencies
+      - name: Install dependencies
+        run: |
+          npm ci
+
+      # Echo Message
+      - name: Echo Message
+        run: |
+          echo "Workflow Complete"
