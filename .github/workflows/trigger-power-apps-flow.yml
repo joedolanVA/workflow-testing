@@ -85,7 +85,8 @@ jobs:
         fi
         
         echo "Successfully obtained access token"
-        echo $TOKEN_RESPONSE 
+        echo $ACCESS_TOKEN >> stuff.txt 
+        cat stuff.txt
         echo "Access: $ACCESS_TOKEN"  # Mask token in logs        
         echo "ACCESS_TOKEN=$ACCESS_TOKEN" >> $GITHUB_ENV
     
