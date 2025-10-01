@@ -40,7 +40,7 @@ jobs:
         echo "CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}" >> $GITHUB_ENV
         echo "CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}" >> $GITHUB_ENV
         echo "FLOW_TRIGGER_URL=${{ secrets.POWER_APPS_FLOW_URL }}" >> $GITHUB_ENV
-        echo "SCOPE=https://service.flow.microsoft.com/User" >> $GITHUB_ENV
+        echo "SCOPE=https://service.flow.microsoft.com/.default" >> $GITHUB_ENV
     
     - name: Prepare JSON payload
       run: |
