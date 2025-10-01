@@ -84,11 +84,10 @@ jobs:
           exit 1
         fi
         
-        echo "Successfully obtained access token"
-        echo $ACCESS_TOKEN >> stuff.txt 
-        cat stuff.txt
-        echo "Access: $ACCESS_TOKEN"  # Mask token in logs        
+        echo "Successfully obtained access token"        
         echo "ACCESS_TOKEN=$ACCESS_TOKEN" >> $GITHUB_ENV
+        echo "Access: ${ACCESS_TOKEN}"  # Mask token in logs        
+
     
     - name: Trigger Power Apps Flow
       run: |
