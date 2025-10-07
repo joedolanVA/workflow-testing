@@ -26,6 +26,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set start timestamp
+        id: start_time
+        run: |
+          echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
+
       - name: Set up environment variables
         run: |
           echo "TENANT_ID=${{ secrets.AZURE_TENANT_ID }}" >> $GITHUB_ENV
@@ -33,10 +38,11 @@ jobs:
           echo "CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}" >> $GITHUB_ENV
           echo "FLOW_TRIGGER_URL=${{ secrets.POWER_APPS_FLOW_URL }}" >> $GITHUB_ENV
           echo "SCOPE=https://service.flow.microsoft.com//.default" >> $GITHUB_ENV
-          # Provide a properly escaped JSON payload so curl -d sends valid JSON.
-          # The JSON below uses GitHub expressions which are expanded before the run
-          # step executes, so the resulting shell sees a plain JSON string.
-          echo "JSON_PAYLOAD={\"action\":\"trigger\",\"environment\":\"${{ github.event.inputs.environment || 'dev' }}\",\"repository\":\"${{ github.repository }}\",\"commit\":\"${{ github.sha }}\",\"actor\":\"${{ github.actor }}\"}" >> $GITHUB_ENV
+          # Export metadata so later steps can include them in the JSON payload.
+          echo "ENVIRONMENT=${{ github.event.inputs.environment || 'dev' }}" >> $GITHUB_ENV
+          echo "REPOSITORY=${{ github.repository }}" >> $GITHUB_ENV
+          echo "COMMIT=${{ github.sha }}" >> $GITHUB_ENV
+          echo "ACTOR=${{ github.actor }}" >> $GITHUB_ENV
 
       - name: Get Azure AD Access Token
         id: get_token
@@ -61,6 +67,52 @@ jobs:
 
           echo "Successfully obtained access token"
           echo "ACCESS_TOKEN=$ACCESS_TOKEN" >> $GITHUB_ENV
+
+      - name: Prepare JSON payload
+        run: |
+          # Calculate duration since start (seconds)
+          END_TIME=$(date +%s)
+          if [ -z "$START_TIME" ]; then
+            START_TIME=0
+          fi
+          DURATION=$((END_TIME - START_TIME))
+
+          # Allow NPX stats to be overridden by existing env vars; default to 0
+          NPX_PASSED=${NPX_PASSED:-0}
+          NPX_FAILED=${NPX_FAILED:-0}
+          NPX_SKIPPED=${NPX_SKIPPED:-0}
+          NPX_TOTAL=${NPX_TOTAL:-0}
+
+          # Newman status and human message defaults
+          NEWMAN_STATUS=${NEWMAN_STATUS:-"not_run"}
+          STATUS_MESSAGE=${STATUS_MESSAGE:-"No tests executed"}
+
+          # Export numeric and string vars so python can read them
+          echo "DURATION=$DURATION" >> $GITHUB_ENV
+          echo "NPX_PASSED=$NPX_PASSED" >> $GITHUB_ENV
+          echo "NPX_FAILED=$NPX_FAILED" >> $GITHUB_ENV
+          echo "NPX_SKIPPED=$NPX_SKIPPED" >> $GITHUB_ENV
+          echo "NPX_TOTAL=$NPX_TOTAL" >> $GITHUB_ENV
+          echo "NEWMAN_STATUS=$NEWMAN_STATUS" >> $GITHUB_ENV
+          echo "STATUS_MESSAGE=$STATUS_MESSAGE" >> $GITHUB_ENV
+
+          # Build the JSON payload safely using jq to avoid heredoc/escaping issues
+          JSON=$(jq -n \
+            --arg action "trigger" \
+            --arg environment "$ENVIRONMENT" \
+            --arg repository "$REPOSITORY" \
+            --arg commit "$COMMIT" \
+            --arg actor "$ACTOR" \
+            --arg duration "$DURATION" \
+            --arg status_message "$STATUS_MESSAGE" \
+            --arg newman_status "$NEWMAN_STATUS" \
+            --arg npx_passed "$NPX_PASSED" \
+            --arg npx_failed "$NPX_FAILED" \
+            --arg npx_skipped "$NPX_SKIPPED" \
+            --arg npx_total "$NPX_TOTAL" \
+            '{ action: $action, environment: $environment, repository: $repository, commit: $commit, actor: $actor, duration: ($duration|tonumber), status_message: $status_message, newman_status: $newman_status, npx_passed: ($npx_passed|tonumber), npx_failed: ($npx_failed|tonumber), npx_skipped: ($npx_skipped|tonumber), npx_total: ($npx_total|tonumber) }')
+
+          echo "JSON_PAYLOAD=$JSON" >> $GITHUB_ENV
 
       - name: Trigger Power Apps Flow
         run: |
