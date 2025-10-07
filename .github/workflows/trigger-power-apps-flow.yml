@@ -74,7 +74,6 @@ jobs:
         FLOW_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST \
           "${FLOW_TRIGGER_URL}" \
           -H "Content-Type: application/json" \
-          -H "Authorization: Bearer ${ACCESS_TOKEN}" \
           -d "${JSON_PAYLOAD}")
         
         # Extract HTTP status code
