@@ -87,6 +87,9 @@ jobs:
           NEWMAN_STATUS=${NEWMAN_STATUS:-"passed"}
           STATUS_MESSAGE=${STATUS_MESSAGE:-"No tests executed"}
 
+          # Current timestamp in ISO8601 UTC for env.NOW
+          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
           # Export numeric and string vars so python can read them
           echo "DURATION=$DURATION" >> $GITHUB_ENV
           echo "NPX_PASSED=$NPX_PASSED" >> $GITHUB_ENV
@@ -95,9 +98,11 @@ jobs:
           echo "NPX_TOTAL=$NPX_TOTAL" >> $GITHUB_ENV
           echo "NEWMAN_STATUS=$NEWMAN_STATUS" >> $GITHUB_ENV
           echo "STATUS_MESSAGE=$STATUS_MESSAGE" >> $GITHUB_ENV
+          echo "NOW=$NOW" >> $GITHUB_ENV
 
           # Build the JSON payload safely using jq to avoid heredoc/escaping issues
           JSON=$(jq -n \
+            --arg now "$NOW" \
             --arg duration "$DURATION" \
             --arg status_message "$STATUS_MESSAGE" \
             --arg newman_status "$NEWMAN_STATUS" \
@@ -105,7 +110,7 @@ jobs:
             --arg npx_failed "$NPX_FAILED" \
             --arg npx_skipped "$NPX_SKIPPED" \
             --arg npx_total "$NPX_TOTAL" \
-            '{ duration: ($duration|tonumber), status_message: $status_message, newman_status: $newman_status, npx_passed: ($npx_passed|tonumber), npx_failed: ($npx_failed|tonumber), npx_skipped: ($npx_skipped|tonumber), npx_total: ($npx_total|tonumber) }')
+            '{ now: $now, duration: ($duration|tonumber), status_message: $status_message, newman_status: $newman_status, npx_passed: ($npx_passed|tonumber), npx_failed: ($npx_failed|tonumber), npx_skipped: ($npx_skipped|tonumber), npx_total: ($npx_total|tonumber) }')
 
           # Use the GITHUB_ENV multiline syntax to safely write JSON that may contain newlines
           echo "JSON_PAYLOAD<<EOF" >> $GITHUB_ENV
