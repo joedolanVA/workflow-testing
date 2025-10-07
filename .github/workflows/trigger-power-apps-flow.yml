@@ -37,28 +37,9 @@ jobs:
         echo "CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}" >> $GITHUB_ENV
         echo "FLOW_TRIGGER_URL=${{ secrets.POWER_APPS_FLOW_URL }}" >> $GITHUB_ENV
         echo "SCOPE=https://service.flow.microsoft.com//.default" >> $GITHUB_ENV
+        echo "JSON_PAYLOAD='{"test": "pass"}'" >> $GITHUB_ENV
     
-    - name: Prepare JSON payload
-      run: |
-        if [ -n "${{ github.event.inputs.custom_payload }}" ]; then
-          echo "JSON_PAYLOAD='{"test": "pass"}' >> $GITHUB_ENV
-        else
-          # Default payload with GitHub context
-          JSON_PAYLOAD=$(cat <<EOF
-        {
-          "repository": "${{ github.repository }}",
-          "branch": "${{ github.ref_name }}",
-          "commit_sha": "${{ github.sha }}",
-          "actor": "${{ github.actor }}",
-          "workflow": "${{ github.workflow }}",
-          "environment": "${{ github.event.inputs.environment || 'auto' }}",
-          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-        }
-        EOF
-          )
-          echo "JSON_PAYLOAD=$JSON_PAYLOAD" >> $GITHUB_ENV
-        fi
-    
+  
     - name: Get Azure AD Access Token
       id: get_token
       run: |
@@ -82,13 +63,7 @@ jobs:
         
         echo "Successfully obtained access token"        
         echo "ACCESS_TOKEN=$ACCESS_TOKEN" >> $GITHUB_ENV
-        echo "Access: ${ACCESS_TOKEN}" >> stuff.txt   # Mask token in logs        
 
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v4.6.2
-      with:
-       # Artifact name
-        path: stuff.txt
     
     - name: Trigger Power Apps Flow
       run: |
