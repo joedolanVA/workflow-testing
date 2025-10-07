@@ -98,11 +98,6 @@ jobs:
 
           # Build the JSON payload safely using jq to avoid heredoc/escaping issues
           JSON=$(jq -n \
-            --arg action "trigger" \
-            --arg environment "$ENVIRONMENT" \
-            --arg repository "$REPOSITORY" \
-            --arg commit "$COMMIT" \
-            --arg actor "$ACTOR" \
             --arg duration "$DURATION" \
             --arg status_message "$STATUS_MESSAGE" \
             --arg newman_status "$NEWMAN_STATUS" \
@@ -110,7 +105,7 @@ jobs:
             --arg npx_failed "$NPX_FAILED" \
             --arg npx_skipped "$NPX_SKIPPED" \
             --arg npx_total "$NPX_TOTAL" \
-            '{ action: $action, environment: $environment, repository: $repository, commit: $commit, actor: $actor, duration: ($duration|tonumber), status_message: $status_message, newman_status: $newman_status, npx_passed: ($npx_passed|tonumber), npx_failed: ($npx_failed|tonumber), npx_skipped: ($npx_skipped|tonumber), npx_total: ($npx_total|tonumber) }')
+            '{ duration: ($duration|tonumber), status_message: $status_message, newman_status: $newman_status, npx_passed: ($npx_passed|tonumber), npx_failed: ($npx_failed|tonumber), npx_skipped: ($npx_skipped|tonumber), npx_total: ($npx_total|tonumber) }')
 
           # Use the GITHUB_ENV multiline syntax to safely write JSON that may contain newlines
           echo "JSON_PAYLOAD<<EOF" >> $GITHUB_ENV
