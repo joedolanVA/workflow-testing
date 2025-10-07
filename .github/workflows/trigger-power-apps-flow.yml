@@ -112,7 +112,10 @@ jobs:
             --arg npx_total "$NPX_TOTAL" \
             '{ action: $action, environment: $environment, repository: $repository, commit: $commit, actor: $actor, duration: ($duration|tonumber), status_message: $status_message, newman_status: $newman_status, npx_passed: ($npx_passed|tonumber), npx_failed: ($npx_failed|tonumber), npx_skipped: ($npx_skipped|tonumber), npx_total: ($npx_total|tonumber) }')
 
-          echo "JSON_PAYLOAD=$JSON" >> $GITHUB_ENV
+          # Use the GITHUB_ENV multiline syntax to safely write JSON that may contain newlines
+          echo "JSON_PAYLOAD<<EOF" >> $GITHUB_ENV
+          echo "$JSON" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Trigger Power Apps Flow
         run: |
